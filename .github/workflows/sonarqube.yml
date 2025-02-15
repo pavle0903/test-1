@@ -1,0 +1,35 @@
+name: SonarQube Analysis
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  pull-requests: write  # Required to add comments on PRs
+
+jobs:
+  sonar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set Up Java (Required for SonarQube)
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: SonarQube Scan
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          sonar-scanner \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.projectKey=pavle0903_test-1 \
+            -Dsonar.login=$SONAR_TOKEN \
+            -Dsonar.sources=.
