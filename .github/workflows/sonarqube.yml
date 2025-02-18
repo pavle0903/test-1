@@ -37,6 +37,7 @@ jobs:
           # Download SonarScanner CLI
           wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
           unzip sonar-scanner-cli-4.8.0.2856-linux.zip
+          export SONAR_SCANNER_OPTS="-Djava.home=$JAVA_HOME"
           export PATH=$(pwd)/sonar-scanner-4.8.0.2856-linux/bin:$PATH
           echo "Using sonar-scanner version:"
           sonar-scanner --version
