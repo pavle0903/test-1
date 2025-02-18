@@ -80,7 +80,7 @@ jobs:
           COMMENT_BODY="## 🚨 SonarQube Quality Gate Failures
           
           
-          > $FAILED_LINES
+          - $FAILED_LINES
           "
           
           gh pr comment "$PR_NUMBER" --body "$COMMENT_BODY"
