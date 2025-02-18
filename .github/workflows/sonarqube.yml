@@ -21,22 +21,21 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Install SonarScanner CLI
-        run: |
-          # Download SonarScanner CLI (adjust version as needed)
-          wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
-          unzip sonar-scanner-cli-4.8.0.2856-linux.zip
-          # Add sonar-scanner to PATH
-          export PATH=$PWD/sonar-scanner-4.8.0.2856-linux/bin:$PATH
-          sonar-scanner --version
-
-      - name: Run SonarQube Scanner and Capture Output
+      - name: Install and Run SonarScanner
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_PROJECT_KEY: "pavle0903_test-1"    # Replace with your actual project key
+          SONAR_ORGANIZATION: "pavle0903"             # Replace with your organization name
           SONAR_HOST_URL: "https://sonarcloud.io"
-          SONAR_PROJECT_KEY: "pavle0903_test-1"
-          SONAR_ORGANIZATION: "pavle0903"
         run: |
+          # Download SonarScanner CLI
+          wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
+          unzip sonar-scanner-cli-4.8.0.2856-linux.zip
+          # Add SonarScanner to PATH
+          export PATH=$(pwd)/sonar-scanner-4.8.0.2856-linux/bin:$PATH
+          echo "Using sonar-scanner version:"
+          sonar-scanner --version
+          # Run SonarQube analysis and capture all output into run-qg.log
           sonar-scanner \
             -Dsonar.projectKey=$SONAR_PROJECT_KEY \
             -Dsonar.organization=$SONAR_ORGANIZATION \
