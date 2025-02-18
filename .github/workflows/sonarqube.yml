@@ -73,8 +73,6 @@ jobs:
           FAILED_LINES=$(cat failed-gates.txt)
 
           COMMENT_BODY="## 🚨 SonarQube Quality Gate Failures
-
-          ---
           
           \`\`\`
           $FAILED_LINES
