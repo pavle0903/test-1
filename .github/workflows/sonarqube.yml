@@ -43,7 +43,7 @@ jobs:
           sonar-scanner --version
           
           # Run SonarScanner with your project settings
-          sonar-scanner \
+          sonar-scanner -X \
             -Dsonar.projectKey=pavle0903_test-1 \
             -Dsonar.organization=pavle0903 \
             -Dsonar.host.url=https://sonarcloud.io \
