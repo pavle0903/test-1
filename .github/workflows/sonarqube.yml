@@ -72,13 +72,10 @@ jobs:
         run: |
           FAILED_LINES=$(cat failed-gates.txt)
 
-          if [[ -n "$FAILED_LINES" ]]; then
-              COMMENT_BODY="🚨 **SonarQube Quality Gate Failures:**\n\n\`\`\`\n$FAILED_LINES\n\`\`\`"
-              
-              echo -e "$COMMENT_BODY" | gh pr comment $PR_NUMBER --body -
-          else
-              echo "✅ No Quality Gate failures found. No comment needed."
-          fi
+          COMMENT_BODY="🚨 **SonarQube Quality Gate Failures:**\n\n\`\`\`\n$FAILED_LINES\n\`\`\`"
+          echo "✅ Posting comment: $COMMENT_BODY"
+
+          gh pr comment "$PR_NUMBER" --body "$COMMENT_BODY"
 
 
 
