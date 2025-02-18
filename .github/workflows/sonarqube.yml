@@ -14,26 +14,49 @@ jobs:
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v4
+        #uses: SonarSource/sonarqube-scan-action@v4
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      - name: Post sonar result to pr
         run: |
-          PR_NUMBER=${{ github.event.pull_request.number }}
-          STATUS=$(curl -s -H "Authorization: Bearer ${{ secrets.SONAR_TOKEN }}" \
-            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=pavle0903_test-1&pullRequest=${{ github.event.pull_request.number }}" | jq -r .projectStatus.status)
+          SonarSource/sonarqube-scan-action@v4 \
+            -Dsonar.projectKey=pavle0903_test-1 \
+            -Dsonar.organization=my-org \
+            -Dsonar.host.url=https://sonarcloud.io \
+            2>&1 | tee sonar-run.log
 
-          echo "PR number: $PR_NUMBER"
-          echo "Quality gate status: $STATUS"
+      - name: extract sonarqube status
+        run: |
+          STATUS=$(grep -oP 'Quality gate status: \K(OK|ERROR|WARN)' sonar-run.log)
+          echo "Extracted SonarQube Status: $STATUS"
+
           
           if [[ "$STATUS" == "ERROR" ]]; then
             echo "❌ SonarQube Quality Gate Failed"
-            gh pr comment $PR_NUMBER --body "🚨 **SonarQube Quality Gate for [$SONAR_PROJECT]($SONAR_LINK) failed!** Please fix the reporrted issues!"
+            gh pr comment ${{ github.event.pull_request.number }} \
+              --body "🚨 **SonarQube Quality Gate for [pavle0903_test-1](https://sonarcloud.io/project/overview?id=pavle0903_test-1) failed!** Please fix the reported issues."
+            exit 1
           else
-            echo "SonarQube passed"
+            echo "✅ SonarQube Passed, no comment needed."
           fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Post sonar result to pr
+      #   run: |
+      #     PR_NUMBER=${{ github.event.pull_request.number }}
+      #     STATUS=$(curl -s -H "Authorization: Bearer ${{ secrets.SONAR_TOKEN }}" \
+      #       "https://sonarcloud.io/api/qualitygates/project_status?projectKey=pavle0903_test-1&pullRequest=${{ github.event.pull_request.number }}" | jq -r .projectStatus.status)
+
+      #     echo "PR number: $PR_NUMBER"
+      #     echo "Quality gate status: $STATUS"
+          
+      #     if [[ "$STATUS" == "ERROR" ]]; then
+      #       echo "❌ SonarQube Quality Gate Failed"
+      #       gh pr comment $PR_NUMBER --body "🚨 **SonarQube Quality Gate for [$SONAR_PROJECT]($SONAR_LINK) failed!** Please fix the reporrted issues!"
+      #     else
+      #       echo "SonarQube passed"
+      #     fi
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 
             # curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
