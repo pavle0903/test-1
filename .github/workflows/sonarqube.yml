@@ -62,10 +62,10 @@ jobs:
       - name: Show SonarQube Scan Output Log
         run: |
           cat test.log
-          #grep "^ERROR: QUALITY GATE STATUS: FAILED" test.log > failed-gates.txt
+          grep "^ERROR: QUALITY GATE STATUS: FAILED" test.log > failed-gates.txt
           
           # Extract all failed Quality Gate messages and format them
-          grep "ERROR: QUALITY GATE STATUS: FAILED" sonar.log | sed -E 's/ERROR: QUALITY GATE STATUS: FAILED - View details on (.*)/ERROR: Quality Gate Status: Failed (\1)/' > failed-gates.txt
+          #grep "ERROR: QUALITY GATE STATUS: FAILED" sonar.log | sed -E 's/ERROR: QUALITY GATE STATUS: FAILED - View details on (.*)/ERROR: Quality Gate Status: Failed (\1)/' > failed-gates.txt
 
 
           cat failed-gates.txt
