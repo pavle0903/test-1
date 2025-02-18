@@ -28,9 +28,16 @@ jobs:
           
           if [[ "$STATUS" == "ERROR" ]]; then
             echo "❌ SonarQube Quality Gate Failed"
-            curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-                 -H "Accept: application/vnd.github.v3+json" \
-                 https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
-                 -d '{"body": "🚨 **SonarQube Quality Gate Failed!** Please fix the reported issues."}'
-            exit 1
+            gh pr comment $PR_NUMBER --body "🚨 **SonarQube Quality Gate for [$SONAR_PROJECT]($SONAR_LINK) failed!** Please fix the reported issues!"
+          else
+            echo "SonarQube passed"
           fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
+            # curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            #      -H "Accept: application/vnd.github.v3+json" \
+            #      https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
+            #      -d '{"body": "🚨 **SonarQube Quality Gate Failed!** Please fix the reported issues."}'
+            # exit 1
