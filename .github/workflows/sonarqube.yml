@@ -17,53 +17,28 @@ jobs:
         uses: SonarSource/sonarqube-scan-action@v4
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          args: > 
-            -Dsonar.projectKey=pavle0903_test-1
-            -Dsonar.organization=pavle0903
-            -Dsonar.host.url=https://sonarcloud.io
-        continue-on-error: true
 
-      - name: Capture SonarQube Logs
-        run: cat $GITHUB_WORKSPACE/.scannerwork/report-task.txt | tee sonar-run.log
-
-      - name: extract sonarqube status
+      - name: Post sonar result to pr
         run: |
-          STATUS=$(grep -oP 'Quality gate status: \K(OK|ERROR|WARN)' sonar-run.log)
-          echo "Extracted SonarQube Status: $STATUS"
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          STATUS=$(curl -s -H "Authorization: Bearer ${{ secrets.SONAR_TOKEN }}" \
+            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=pavle0903_test-1&pullRequest=${{ github.event.pull_request.number }}" | jq -r .projectStatus.status)
 
+          echo "PR number: $PR_NUMBER"
+          echo "Quality gate status: $STATUS"
           
           if [[ "$STATUS" == "ERROR" ]]; then
             echo "❌ SonarQube Quality Gate Failed"
-            gh pr comment ${{ github.event.pull_request.number }} \
-              --body "🚨 **SonarQube Quality Gate for [pavle0903_test-1](https://sonarcloud.io/project/overview?id=pavle0903_test-1) failed!** Please fix the reported issues."
-            exit 1
+            gh pr comment $PR_NUMBER --body "🚨 **SonarQube Quality Gate for [$SONAR_PROJECT]($SONAR_LINK) failed!** Please fix the reporrted issues!"
           else
-            echo "✅ SonarQube Passed, no comment needed."
+            echo "SonarQube passed"
           fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # - name: Post sonar result to pr
-      #   run: |
-      #     PR_NUMBER=${{ github.event.pull_request.number }}
-      #     STATUS=$(curl -s -H "Authorization: Bearer ${{ secrets.SONAR_TOKEN }}" \
-      #       "https://sonarcloud.io/api/qualitygates/project_status?projectKey=pavle0903_test-1&pullRequest=${{ github.event.pull_request.number }}" | jq -r .projectStatus.status)
-
-      #     echo "PR number: $PR_NUMBER"
-      #     echo "Quality gate status: $STATUS"
-          
-      #     if [[ "$STATUS" == "ERROR" ]]; then
-      #       echo "❌ SonarQube Quality Gate Failed"
-      #       gh pr comment $PR_NUMBER --body "🚨 **SonarQube Quality Gate for [$SONAR_PROJECT]($SONAR_LINK) failed!** Please fix the reporrted issues!"
-      #     else
-      #       echo "SonarQube passed"
-      #     fi
-      #   env:
-      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 
-            # curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            #      -H "Accept: application/vnd.github.v3+json" \
-            #      https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
-            #      -d '{"body": "🚨 **SonarQube Quality Gate Failed!** Please fix the reported issues."}'
-            # exit 1
+            curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                 -H "Accept: application/vnd.github.v3+json" \
+                 https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
+                 -d '{"body": "🚨 **SonarQube Quality Gate Failed!** Please fix the reported issues."}'
+            exit 1
