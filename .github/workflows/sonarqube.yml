@@ -72,15 +72,12 @@ jobs:
         run: |
           FAILED_LINES=$(cat failed-gates.txt)
 
-          COMMENT_BODY="🚨 **SonarQube Quality Gate Failures:**
+          COMMENT_BODY=$(printf "🚨 **SonarQube Quality Gate Failures:**\n\n\`\`\`\n%s\n\`\`\`\n" "$FAILED_LINES")
 
-          \`\`\`
-          $FAILED_LINES
-          \`\`\`"
-          
           echo "✅ Posting comment: $COMMENT_BODY"
           
           gh pr comment "$PR_NUMBER" --body "$COMMENT_BODY"
+
 
 
 
