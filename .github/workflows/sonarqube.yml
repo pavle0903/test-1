@@ -10,43 +10,33 @@ on:
 
 jobs:
   sonar:
+    container:
+      image: sonarsource/sonar-scanner-cli:latest
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Set Up Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-      - name: Export JAVA_HOME and PATH
+      # - name: Set Up Java
+      #   uses: actions/setup-java@v3
+      #   with:
+      #     distribution: 'temurin'
+      #     java-version: '17'
+      # - name: Export JAVA_HOME and PATH
+      #   run: |
+      #     echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
+      #     echo "PATH=$PATH" >> $GITHUB_ENV
+
+
+      - name: Run SonarScanner and Capture Output
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
-          echo "PATH=$PATH" >> $GITHUB_ENV
-
-
-      - name: Set Up Java 17 and Run SonarScanner
-        run: |
-          # Set up Java 17 explicitly (adjust the JAVA_HOME path as needed)
-          export JAVA_HOME="/opt/hostedtoolcache/Java_Temurin/17.0.2/x64"
-          export PATH="$JAVA_HOME/bin:$PATH"
-          echo "JAVA_HOME: $JAVA_HOME"
-          java -version
-          # Download SonarScanner CLI
-          wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
-          unzip sonar-scanner-cli-4.8.0.2856-linux.zip
-          export PATH=$(pwd)/sonar-scanner-4.8.0.2856-linux/bin:$PATH
-          echo "Using sonar-scanner version:"
-          sonar-scanner --version
-          
-          # Run SonarScanner with your project settings
-          sonar-scanner -X \
+          sonar-scanner \
             -Dsonar.projectKey=pavle0903_test-1 \
             -Dsonar.organization=pavle0903 \
             -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }} 2>&1 | tee run-qg.log
-        shell: bash
+            -Dsonar.login=$SONAR_TOKEN 2>&1 | tee run-qg.log
 
 
       - name: Show SonarQube Scan Output Log
