@@ -21,11 +21,10 @@ jobs:
         run: |
           PR_NUMBER=${{ github.event.pull_request.number }}
           STATUS=$(curl -s -H "Authorization: Bearer ${{ secrets.SONAR_TOKEN }}" \
-            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=pavle0903_test-1" | jq -r .projectStatus.status)
+            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=pavle0903_test-1&branch=${{ github.head_ref }}" | jq -r .projectStatus.status)
 
           echo "PR number: $PR_NUMBER"
           echo "Quality gate status: $STATUS"
-          echo "branch ${{ github.head_ref }} and base ${{ github.base_ref }}"
           
           if [[ "$STATUS" == "ERROR" ]]; then
             echo "❌ SonarQube Quality Gate Failed"
