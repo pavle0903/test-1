@@ -25,6 +25,7 @@ jobs:
 
           echo "PR number: $PR_NUMBER"
           echo "Quality gate status: $STATUS"
+          echo "branch ${{ github.head_ref }} and base ${{ github.base_ref }}"
           
           if [[ "$STATUS" == "ERROR" ]]; then
             echo "❌ SonarQube Quality Gate Failed"
