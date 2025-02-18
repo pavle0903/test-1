@@ -1,19 +1,137 @@
-name: Build
+name: SonarQube Analysis
+
 on:
   push:
     branches:
       - main
   pull_request:
-    types: [opened, synchronize, reopened]
+    branches:
+      - main
+
 jobs:
-  sonarqube:
-    name: SonarQube
+  sonar:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set Up Java
+        uses: actions/setup-java@v3
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v4
+          distribution: 'temurin'
+          java-version: '11.0.17'
+      # - name: Export JAVA_HOME and PATH
+      #   run: |
+      #     echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
+      #     echo "PATH=$PATH" >> $GITHUB_ENV
+      # - name: Install SonarScanner CLI
+      #   run: |
+      #     wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
+      #     unzip sonar-scanner-cli-4.8.0.2856-linux.zip
+      #     export PATH=$(pwd)/sonar-scanner-4.8.0.2856-linux/bin:$PATH
+      #     sonar-scanner --version
+
+
+      - name: Run SonarScanner and Capture Output
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          # # Set JAVA_HOME explicitly to Java 11 folder
+          # export JAVA_HOME="/usr/lib/jvm/java-11-openjdk-amd64"
+          # export PATH="$JAVA_HOME/bin:$PATH"
+          # echo "JAVA_HOME is set to $JAVA_HOME"
+          # java -version
+          echo "ERROR: QUALITY GATE STATUS: FAILED - VIEW DETAILS HERE" >> test.log
+          echo "ERROR: QUALITY GATE STATUS: FAILED - VIEW DETAILS THERE" >> test.log
+          echo "ERROR: QUALITY GATE STATUS: FAILED - VIEW DETAILS ARE" >> test.log
+          echo "INFO: QUALITY GATE STATUS: PASSED - VIEW DETAILS HERE" >> test.log
+          echo "ERROR: QUALITY GATE STATUS: FAILED - VIEW DETAILS ERE" >> test.log
+          # wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
+          # unzip sonar-scanner-cli-4.8.0.2856-linux.zip
+          # export PATH=$(pwd)/sonar-scanner-4.8.0.2856-linux/bin:$PATH
+          # sonar-scanner --version
+          # java -version
+          # echo "$JAVA_HOME"
+          # sonar-scanner \
+          #   -Dsonar.projectKey=pavle0903_test-1 \
+          #   -Dsonar.organization=pavle0903 \
+          #   -Dsonar.host.url=https://sonarcloud.io \
+          #   -Dsonar.login=$SONAR_TOKEN 2>&1 | tee run-qg.log
+
+
+      - name: Show SonarQube Scan Output Log
+        run: |
+          cat test.log
+          grep "^ERROR: QUALITY GATE STATUS: FAILED" test.log | sed 's/^/- /' > failed-gates.txt
+          
+          # Extract all failed Quality Gate messages and format them
+          #grep "ERROR: QUALITY GATE STATUS: FAILED" sonar.log | sed -E 's/ERROR: QUALITY GATE STATUS: FAILED - View details on (.*)/ERROR: Quality Gate Status: Failed (\1)/' > failed-gates.txt
+
+
+          cat failed-gates.txt
+
+      - name: Post pr comments
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          FAILED_LINES=$(cat failed-gates.txt)
+
+          COMMENT_BODY="## 🚨 SonarQube Quality Gate Failures
+          
+          
+          $FAILED_LINES
+          "
+          
+          gh pr comment "$PR_NUMBER" --body "$COMMENT_BODY"
+
+
+
+
+
+
+
+# name: Build
+# on:
+#   push:
+#     branches:
+#       - main
+#   pull_request:
+#     types: [opened, synchronize, reopened]
+# jobs:
+#   sonarqube:
+#     name: SonarQube
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v4
+#         with:
+#           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+#       - name: SonarQube Scan
+#         uses: SonarSource/sonarqube-scan-action@v4
+#         env:
+#           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+#       - name: Post sonar result to pr
+#         run: |
+#           PR_NUMBER=${{ github.event.pull_request.number }}
+#           STATUS=$(curl -s -H "Authorization: Bearer ${{ secrets.SONAR_TOKEN }}" \
+#             "https://sonarcloud.io/api/qualitygates/project_status?projectKey=pavle0903_test-1&pullRequest=${{ github.event.pull_request.number }}" | jq -r .projectStatus.status)
+
+#           echo "PR number: $PR_NUMBER"
+#           echo "Quality gate status: $STATUS"
+          
+#           if [[ "$STATUS" == "ERROR" ]]; then
+#             echo "❌ SonarQube Quality Gate Failed"
+#             gh pr comment $PR_NUMBER --body "🚨 **SonarQube Quality Gate for [$SONAR_PROJECT]($SONAR_LINK) failed!** Please fix the reporrted issues!"
+#           else
+#             echo "SonarQube passed"
+#           fi
+#         env:
+#           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
+            # curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            #      -H "Accept: application/vnd.github.v3+json" \
+            #      https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
+            #      -d '{"body": "🚨 **SonarQube Quality Gate Failed!** Please fix the reported issues."}'
+            # exit 1
