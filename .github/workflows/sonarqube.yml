@@ -28,7 +28,7 @@ jobs:
           
           if [[ "$STATUS" == "ERROR" ]]; then
             echo "❌ SonarQube Quality Gate Failed"
-            gh pr comment $PR_NUMBER --body "🚨 **SonarQube Quality Gate for [$SONAR_PROJECT]($SONAR_LINK) failed!** Please fix the reported issues!"
+            gh pr comment $PR_NUMBER --body "🚨 **SonarQube Quality Gate for [$SONAR_PROJECT]($SONAR_LINK) failed!** Please fix the reporrted issues!"
           else
             echo "SonarQube passed"
           fi
