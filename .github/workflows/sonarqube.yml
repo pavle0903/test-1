@@ -14,15 +14,18 @@ jobs:
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
       - name: SonarQube Scan
-        #uses: SonarSource/sonarqube-scan-action@v4
+        uses: SonarSource/sonarqube-scan-action@v4
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          SonarSource/sonarqube-scan-action@v4 \
-            -Dsonar.projectKey=pavle0903_test-1 \
-            -Dsonar.organization=my-org \
-            -Dsonar.host.url=https://sonarcloud.io \
-            2>&1 | tee sonar-run.log
+        with:
+          args: > 
+            -Dsonar.projectKey=pavle0903_test-1
+            -Dsonar.organization=pavle0903
+            -Dsonar.host.url=https://sonarcloud.io
+        continue-on-error: true
+
+      - name: Capture SonarQube Logs
+        run: cat $GITHUB_WORKSPACE/.scannerwork/report-task.txt | tee sonar-run.log
 
       - name: extract sonarqube status
         run: |
