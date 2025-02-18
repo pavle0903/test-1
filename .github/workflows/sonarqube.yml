@@ -17,3 +17,16 @@ jobs:
         uses: SonarSource/sonarqube-scan-action@v4
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: Check SonarQube Quality Gate
+        run: |
+          STATUS=$(curl -s -u ${{ secrets.SONAR_TOKEN }} \
+            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=pavle0903_test-1" | jq -r .projectStatus.status)
+      
+          if [[ "$STATUS" == "ERROR" ]]; then
+            echo "❌ SonarQube Quality Gate Failed"
+            curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                 -H "Accept: application/vnd.github.v3+json" \
+                 https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
+                 -d '{"body": "🚨 **SonarQube Quality Gate Failed!** Please fix the reported issues."}'
+            exit 1
+          fi
