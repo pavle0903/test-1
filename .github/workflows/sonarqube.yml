@@ -20,6 +20,11 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+      - name: Export JAVA_HOME and PATH
+        run: |
+          echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
+          echo "PATH=$PATH" >> $GITHUB_ENV
+
 
       - name: Install and Run SonarScanner
         env:
