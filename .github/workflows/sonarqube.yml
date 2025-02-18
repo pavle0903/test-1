@@ -1,40 +1,92 @@
-name: Build
+name: SonarQube Analysis
+
 on:
   push:
     branches:
       - main
   pull_request:
-    types: [opened, synchronize, reopened]
+    branches:
+      - main
+
 jobs:
-  sonarqube:
-    name: SonarQube
+  sonar:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set Up Java
+        uses: actions/setup-java@v3
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v4
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install SonarScanner CLI
+        run: |
+          # Download SonarScanner CLI (adjust version as needed)
+          wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
+          unzip sonar-scanner-cli-4.8.0.2856-linux.zip
+          # Add sonar-scanner to PATH
+          export PATH=$PWD/sonar-scanner-4.8.0.2856-linux/bin:$PATH
+          sonar-scanner --version
+
+      - name: Run SonarQube Scanner and Capture Output
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-      - name: Post sonar result to pr
+          SONAR_HOST_URL: "https://sonarcloud.io"
+          SONAR_PROJECT_KEY: "your-project-key"
+          SONAR_ORGANIZATION: "your-org"
         run: |
-          PR_NUMBER=${{ github.event.pull_request.number }}
-          STATUS=$(curl -s -H "Authorization: Bearer ${{ secrets.SONAR_TOKEN }}" \
-            "https://sonarcloud.io/api/qualitygates/project_status?projectKey=pavle0903_test-1&pullRequest=${{ github.event.pull_request.number }}" | jq -r .projectStatus.status)
+          sonar-scanner \
+            -Dsonar.projectKey=$SONAR_PROJECT_KEY \
+            -Dsonar.organization=$SONAR_ORGANIZATION \
+            -Dsonar.host.url=$SONAR_HOST_URL \
+            -Dsonar.login=$SONAR_TOKEN 2>&1 | tee run-qg.log
 
-          echo "PR number: $PR_NUMBER"
-          echo "Quality gate status: $STATUS"
+      - name: Show SonarQube Scan Output Log
+        run: |
+          echo "=== Contents of run-qg.log ==="
+          cat run-qg.log
+
+
+
+# name: Build
+# on:
+#   push:
+#     branches:
+#       - main
+#   pull_request:
+#     types: [opened, synchronize, reopened]
+# jobs:
+#   sonarqube:
+#     name: SonarQube
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v4
+#         with:
+#           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+#       - name: SonarQube Scan
+#         uses: SonarSource/sonarqube-scan-action@v4
+#         env:
+#           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+#       - name: Post sonar result to pr
+#         run: |
+#           PR_NUMBER=${{ github.event.pull_request.number }}
+#           STATUS=$(curl -s -H "Authorization: Bearer ${{ secrets.SONAR_TOKEN }}" \
+#             "https://sonarcloud.io/api/qualitygates/project_status?projectKey=pavle0903_test-1&pullRequest=${{ github.event.pull_request.number }}" | jq -r .projectStatus.status)
+
+#           echo "PR number: $PR_NUMBER"
+#           echo "Quality gate status: $STATUS"
           
-          if [[ "$STATUS" == "ERROR" ]]; then
-            echo "❌ SonarQube Quality Gate Failed"
-            gh pr comment $PR_NUMBER --body "🚨 **SonarQube Quality Gate for [$SONAR_PROJECT]($SONAR_LINK) failed!** Please fix the reporrted issues!"
-          else
-            echo "SonarQube passed"
-          fi
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#           if [[ "$STATUS" == "ERROR" ]]; then
+#             echo "❌ SonarQube Quality Gate Failed"
+#             gh pr comment $PR_NUMBER --body "🚨 **SonarQube Quality Gate for [$SONAR_PROJECT]($SONAR_LINK) failed!** Please fix the reporrted issues!"
+#           else
+#             echo "SonarQube passed"
+#           fi
+#         env:
+#           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 
             # curl -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
