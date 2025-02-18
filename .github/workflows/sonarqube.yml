@@ -19,7 +19,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       - name: Check SonarQube Quality Gate
         run: |
-          STATUS=$(curl -s -u ${{ secrets.SONAR_TOKEN }} \
+          STATUS=$(curl -s -H "Authorization: Bearer ${{ secrets.SONAR_TOKEN }}" \
             "https://sonarcloud.io/api/qualitygates/project_status?projectKey=pavle0903_test-1" | jq -r .projectStatus.status)
       
           if [[ "$STATUS" == "ERROR" ]]; then
