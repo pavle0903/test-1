@@ -41,6 +41,7 @@ jobs:
           # export PATH="$JAVA_HOME/bin:$PATH"
           # echo "JAVA_HOME is set to $JAVA_HOME"
           # java -version
+          echo "blabla" >> test.log
           wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
           unzip sonar-scanner-cli-4.8.0.2856-linux.zip
           export PATH=$(pwd)/sonar-scanner-4.8.0.2856-linux/bin:$PATH
@@ -56,6 +57,7 @@ jobs:
 
       - name: Show SonarQube Scan Output Log
         run: |
+          cat test.log
           echo "=== Contents of run-qg.log ==="
           cat run-qg.log
 
